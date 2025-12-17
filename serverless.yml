@@ -2,10 +2,13 @@
 org: thiagoramos
 service: foodiary-api
 
+plugins:
+  - serverless-offline
+
 provider:
   name: aws
   region: us-east-1
-  runtime: nodejs24.x
+  runtime: nodejs20.x
   architecture: arm64
 
 package: 
@@ -19,15 +22,14 @@ build:
 
 functions:
   signin:
-    handler: src/signin.handler
+    handler: src/functions/signin.handler
     events:
       - httpApi:
           path: /signin
           method: POST
 
-functions:
   signup:
-    handler: src/signup.handler
+    handler: src/functions/signup.handler
     events:
       - httpApi:
           path: /signup

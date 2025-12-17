@@ -1,10 +1,23 @@
+import z from "zod";
 import type { HttpRequest, HttpResponse } from "../types/Http.js";
-import { ok } from "../utils/http.js";
+import { badRequest, ok } from "../utils/http.js";
+
+const schema = z.object({
+    email: z.email(),
+    password: z.string().min(8),
+})
 
 export class SignInController {
-    static async handle(request: HttpRequest): Promise<HttpResponse> {
+    static async handle({ body }: HttpRequest): Promise<HttpResponse> {
+        const { success, error, data } = schema.safeParse(body);
+
+        if (!success) {
+            return badRequest({ errors: error.issues });
+        }
+
         return ok({
-            accessToken: 'Sign in: Token de aecsso',
+            data,
         })
     }
+
 }
