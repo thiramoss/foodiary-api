@@ -25,6 +25,7 @@ build:
 functions:
   signin:
     handler: src/functions/signin.handler
+    timeout: 30
     events:
       - httpApi:
           path: /signin
