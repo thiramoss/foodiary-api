@@ -5,6 +5,7 @@ import { db } from "../db/index.js";
 import { usersTable } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
+import { signAccessTokenFor } from "../lib/jwt.js";
 
 const schema = z.object({
     goal: z.enum(['lose', 'maintain', 'gain']),
@@ -14,17 +15,17 @@ const schema = z.object({
     weight: z.number(),
     activityLevel: z.number().min(1).max(5),
     account: z.object({
-        name:z.string().min(1),
-        email:z.email(),
-        password:z.string().min(8)
+        name: z.string().min(1),
+        email: z.email(),
+        password: z.string().min(8)
     })
 })
 
 export class SignUpController {
     static async handle({ body }: HttpRequest): Promise<HttpResponse> {
-        const {success, error, data} = schema.safeParse(body);
+        const { success, error, data } = schema.safeParse(body);
 
-        if(!success){
+        if (!success) {
             return badRequest({ errors: error.issues });
         }
 
@@ -41,7 +42,7 @@ export class SignUpController {
 
         const { account, ...rest } = data;
 
-        const hashedPassword = await hash(account.password, 12);
+        const hashedPassword = await hash(account.password, 10);
 
         const [user] = await db.insert(usersTable).values({
             ...account,
@@ -52,12 +53,18 @@ export class SignUpController {
             fats: 0,
             proteins: 0,
         })
-        .returning({
-            id: usersTable.id,
-        })
+            .returning({
+                id: usersTable.id,
+            })
+
+        if (!user) {
+            return badRequest({ error: "User creation failed" });
+        }
+
+        const accessToken = signAccessTokenFor(user.id);
 
         return created({
-            userId: user?.id,
+            accessToken
         })
     }
 }
