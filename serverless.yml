@@ -39,3 +39,10 @@ functions:
       - httpApi:
           path: /signup
           method: POST
+  me:
+    handler: src/functions/me.handler
+    timeout: 30
+    events:
+      - httpApi:
+          path: /me
+          method: GET
