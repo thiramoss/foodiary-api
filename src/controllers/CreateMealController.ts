@@ -1,0 +1,37 @@
+import { db } from "../db/index.js";
+import { mealsTable } from "../db/schema.js";
+import type { HttpResponse, ProtectedHttpRequest } from "../types/Http.js";
+import { badRequest, ok } from "../utils/http.js";
+import z from "zod";
+
+const schema = z.object({
+    fileType: z.enum(['audio/m4a', 'image/jpeg'])
+})
+
+export class CreateMealController {
+    static async handle({ userId, body }: ProtectedHttpRequest): Promise<HttpResponse> {
+        const { success, error, data } = schema.safeParse(body);
+
+        if (!success) {
+            return badRequest({ errors: error.issues });
+        }
+
+        const [meal] = await db
+            .insert(mealsTable)
+            .values({
+                userId,
+                inputFileKey: 'input_file_key',
+                inputType: data.fileType === 'audio/m4a' ? 'audio' : 'picture',
+                status: 'uploading',
+                icon: '',
+                name: '',
+                foods: [],
+            }).returning({ id: mealsTable.id })
+
+        if (!meal) {
+            throw new Error("Failed to create meal record.");
+        }
+
+        return ok({ mealId: meal.id });
+    }
+}
