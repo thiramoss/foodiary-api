@@ -55,6 +55,7 @@ export class SignUpController {
 
         const [user] = await db.insert(usersTable).values({
             ...account,
+            password: hashedPassword,
             ...rest,
             ...goals,
         })
