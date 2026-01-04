@@ -10,9 +10,18 @@ provider:
   region: us-east-1
   runtime: nodejs20.x
   architecture: arm64
+  timeout: 13
   environment:
     DATABASE_URL: ${env:DATABASE_URL}
     JWT_SECRET: ${env:JWT_SECRET}
+    BUCKET_NAME: !Ref UploadsBucket
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource: !Sub '${UploadsBucket.Arn}/*'
 
 package: 
   individually: true
@@ -21,12 +30,13 @@ build:
   esbuild:
     minify: true
     sourcemap: false
+    banner:
+      js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);"
 
 
 functions:
   signin:
     handler: src/functions/signin.handler
-    timeout: 30
     events:
       - httpApi:
           path: /signin
@@ -34,35 +44,30 @@ functions:
 
   signup:
     handler: src/functions/signup.handler
-    timeout: 30
     events:
       - httpApi:
           path: /signup
           method: POST
   me:
     handler: src/functions/me.handler
-    timeout: 30
     events:
       - httpApi:
           path: /me
           method: GET
   createMeal:
     handler: src/functions/createMeal.handler
-    timeout: 30
     events:
       - httpApi:
           path: /meals
           method: POST
   listMeals:
     handler: src/functions/listMeals.handler
-    timeout: 30
     events:
       - httpApi:
           path: /meals
           method: GET
   getMealById:
     handler: src/functions/getMealById.handler
-    timeout: 30
     events:
       - httpApi:
           path: /meals/{mealId}
