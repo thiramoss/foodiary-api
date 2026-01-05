@@ -1,9 +1,17 @@
+import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import type { S3Event } from "aws-lambda";
+import { sqsClient } from "../clients/sqsClient.js";
 
 export async function handler(event: S3Event) {
     await Promise.all(
-        event.Records.map(record => {
-            record.s3.object.key
+        event.Records.map(async record => {
+            const command = new SendMessageCommand({
+                QueueUrl: process.env.MEALS_QUEUE_URL,
+                MessageBody: JSON.stringify({ fileKey: record.s3.object.key})
+            });
+        
+            await sqsClient.send(command);
+            
         }),
     )
 }
