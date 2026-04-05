@@ -37,7 +37,7 @@ export class ProcessMeal {
 
         const mealDetails = await getMealDetailsFromText({
           createdAt: new Date(),
-          text: transcription,
+          text: transcription.text,
         });
 
         icon = mealDetails.icon;

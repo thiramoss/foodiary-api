@@ -1,21 +1,15 @@
 import OpenAI, { toFile } from 'openai';
 
-// 1. Configuração do Client apontando para a Groq
-const client = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY, // Certifique-se de ter essa var de ambiente
-  baseURL: 'https://api.groq.com/openai/v1',
-});
+const client = new OpenAI();
 
 export async function transcribeAudio(fileBuffer: Buffer) {
   const transcription = await client.audio.transcriptions.create({
-    // 2. Modelo Whisper da Groq (versão large-v3 é a recomendada para multilinguagem)
-    model: 'whisper-large-v3', 
+    model: 'whisper-1',
     language: 'pt',
-    response_format: 'text',
     file: await toFile(fileBuffer, 'audio.m4a', { type: 'audio/m4a' }),
   });
 
-  return transcription;
+  return transcription; 
 }
 
 type GetMealDetailsFromTextParams = {
@@ -28,37 +22,25 @@ export async function getMealDetailsFromText({
   text,
 }: GetMealDetailsFromTextParams) {
   const response = await client.chat.completions.create({
-    // 3. Modelo de texto rápido e inteligente (Llama 3.3 70B é excelente para instruções complexas)
-    model: 'llama-3.3-70b-versatile',
-    // 4. Forçar JSON Mode é essencial na Groq para garantir a estrutura
-    response_format: { type: "json_object" }, 
+    model: 'gpt-4o-mini', 
+    response_format: { type: 'json_object' }, 
     messages: [
       {
         role: 'system',
         content: `
-          Você é um nutricionista e está atendendo um de seus pacientes.
+          Você é um nutricionista. Analise o texto da refeição e retorne um JSON.
+          Instruções:
+          1. Nome e emoji da refeição conforme o horário.
+          2. Identifique os alimentos citados no texto.
+          3. Estime calorias, macros e quantidades.
           
-          IMPORTANTE: A resposta deve ser estritamente um JSON válido.
-          
-          Seu papel é:
-          1. Dar um nome e escolher um emoji para a refeição baseado no horário dela.
-          2. Identificar os alimentos presentes na imagem.
-          3. Estimar, para cada alimento identificado:
-            - Nome do alimento (em português)
-            - Quantidade aproximada (em gramas ou unidades)
-            - Calorias (kcal)
-            - Carboidratos (g)
-            - Proteínas (g)
-            - Gorduras (g)
-
-          Seja direto, objetivo e evite explicações. Apenas retorne os dados em JSON no formato abaixo:
-
+          Responda estritamente em JSON seguindo este formato:
           {
             "name": "Jantar",
             "icon": "🍗",
             "foods": [
               {
-                "name": "Arroz branco cozido",
+                "name": "Arroz",
                 "quantity": "150g",
                 "calories": 193,
                 "carbohydrates": 42,
@@ -71,21 +53,15 @@ export async function getMealDetailsFromText({
       },
       {
         role: 'user',
-        content: `
-          Data: ${createdAt}
-          Refeição: ${text}
-        `,
+        content: `Data: ${createdAt}. Refeição: ${text}`,
       },
     ],
   });
 
-  const json = response.choices[0]?.message?.content;
+  const content = response.choices[0]?.message.content;
+  if (!content) throw new Error('Failed to process meal.');
 
-  if (!json) {
-    throw new Error('Failed to process meal.');
-  }
-
-  return JSON.parse(json);
+  return JSON.parse(content);
 }
 
 type GetMealDetailsFromImageParams = {
@@ -98,29 +74,17 @@ export async function getMealDetailsFromImage({
   imageURL,
 }: GetMealDetailsFromImageParams) {
   const response = await client.chat.completions.create({
-    // 5. Modelo de Visão da Groq (Llama 3.2 Vision)
-    model: 'llama-3.2-90b-vision-preview', 
-    response_format: { type: "json_object" },
+    model: 'gpt-4o-mini',
+    response_format: { type: 'json_object' },
     messages: [
       {
         role: 'system',
         content: `
-          Meal date: ${createdAt}
-
-          Você é um nutricionista especializado em análise de alimentos por imagem.
-          IMPORTANTE: A resposta deve ser estritamente um JSON válido.
-
-          Seu papel é:
-          1. Dar um nome e escolher um emoji para a refeição baseado no horário dela.
-          2. Identificar os alimentos presentes na imagem.
-          3. Estimar macros (calorias, carbos, proteínas, gorduras).
-
-          Retorne APENAS o JSON no formato:
-          {
-            "name": "Jantar",
-            "icon": "🍗",
-            "foods": [...]
-          }
+          Você é um nutricionista. Analise a imagem e retorne um JSON com os alimentos identificados, 
+          quantidades estimadas e valores nutricionais.
+          Use a data/hora para definir o nome da refeição: ${createdAt}.
+          
+          Formato de saída: JSON (mesma estrutura da função de texto).
         `,
       },
       {
@@ -128,20 +92,15 @@ export async function getMealDetailsFromImage({
         content: [
           {
             type: 'image_url',
-            image_url: {
-              url: imageURL,
-            },
+            image_url: { url: imageURL },
           },
         ],
       },
     ],
   });
 
-  const json = response.choices[0]?.message?.content;
+  const content = response.choices[0]?.message.content;
+  if (!content) throw new Error('Failed to process image.');
 
-  if (!json) {
-    throw new Error('Failed to process meal.');
-  }
-
-  return JSON.parse(json);
+  return JSON.parse(content);
 }
