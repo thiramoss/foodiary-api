@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="custom-resources">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/.serverless/custom-resources.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

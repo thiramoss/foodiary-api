@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="build">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-createMeal.zip!/" />
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-signin.zip!/" />
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-listMeals.zip!/" />
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-signup.zip!/" />
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-fileUploadedEvent.zip!/" />
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-processMeal.zip!/" />
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-me.zip!/" />
+      <root url="jar://$PROJECT_DIR$/.serverless/build/foodiary-api-getMealById.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
